@@ -1,0 +1,36 @@
+default_stages:
+  - pre-commit
+  - pre-push
+repos:
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v4.6.0
+  hooks:
+    -   id: trailing-whitespace
+    -   id: end-of-file-fixer
+    -   id: check-yaml
+        args:
+          - --unsafe
+    -   id: check-toml
+    -   id: check-added-large-files
+    -   id: detect-aws-credentials
+        args:
+          - --allow-missing-credentials
+    -  id: detect-private-key
+    # -  id: pretty-format-json
+
+- repo: https://github.com/gitleaks/gitleaks
+  rev: v8.18.4
+  hooks:
+    - id: gitleaks
+
+- repo: https://github.com/charliermarsh/ruff-pre-commit
+  rev: v0.5.6
+  hooks:
+    - id: ruff
+      args:
+          - --fix
+    - id: ruff-format
+- repo: https://github.com/awslabs/git-secrets.git
+  rev: master
+  hooks:
+    - id: git-secrets
