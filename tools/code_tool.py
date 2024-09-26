@@ -67,9 +67,12 @@ class CodeTool(BaseTool):
                 file_contents = get_file_contents(impl_path)
         except Exception:
             # print(f"javalang tree parser error in {path}")
-            if "interface" in "".join(file_contents):
+            impl_path = input(f"implementation class {class_name} not found. input interface implementation file path: ")
+            if impl_path == "" and "interface" in "".join(file_contents):
                 print("interface detected")
                 impl_path = path_tool.get_impl(path)
+                file_contents = get_file_contents(impl_path)
+            else:
                 file_contents = get_file_contents(impl_path)
         result = ""
         try:

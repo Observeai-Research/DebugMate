@@ -1,0 +1,169 @@
+https://github.com/apache/dubbo/issues/13689
+
+Environment
+Dubbo version: 3.2.7
+Operating System version: windows11
+Java version: 17
+Steps to reproduce this issue
+
+
+ I have searched the issues of this repository and believe that this is not a duplicate.
+Environment
+Dubbo version: 3.2.7
+Operating System version: windows11
+Java version: 17
+Steps to reproduce this issue
+image
+image
+image
+image
+
+Pls. provide [GitHub address] to reproduce this issue.
+
+Expected Behavior
+Actual Behavior
+If there is an exception, please attach the exception trace:
+
+  2024-01-25 15:18:28  [DUBBO] publish service definition metadata error., dubbo version: 3.2.7, current host: 172.17.2.10, error code: 1-11. This may be caused by , go to https://dubbo.apache.org/faq/1/11 to find instructions. 
+  java.lang.NullPointerException: Cannot invoke "String.contains(java.lang.CharSequence)" because "type" is null
+	at org.apache.dubbo.metadata.definition.model.TypeDefinition.isGenericType(TypeDefinition.java:111)
+	at org.apache.dubbo.metadata.definition.model.TypeDefinition.formatType(TypeDefinition.java:92)
+	at org.apache.dubbo.metadata.definition.model.TypeDefinition.setType(TypeDefinition.java:152)
+	at org.apache.dubbo.metadata.definition.model.TypeDefinition.<init>(TypeDefinition.java:66)
+	at org.apache.dubbo.metadata.definition.builder.DefaultTypeBuilder.build(DefaultTypeBuilder.java:42)
+	at org.apache.dubbo.metadata.definition.TypeDefinitionBuilder.build(TypeDefinitionBuilder.java:57)
+	at org.apache.dubbo.metadata.definition.builder.DefaultTypeBuilder.build(DefaultTypeBuilder.java:56)
+	at org.apache.dubbo.metadata.definition.TypeDefinitionBuilder.build(TypeDefinitionBuilder.java:57)
+	at org.apache.dubbo.metadata.definition.builder.DefaultTypeBuilder.build(DefaultTypeBuilder.java:56)
+	at org.apache.dubbo.metadata.definition.TypeDefinitionBuilder.build(TypeDefinitionBuilder.java:57)
+	at org.apache.dubbo.metadata.definition.builder.DefaultTypeBuilder.build(DefaultTypeBuilder.java:56)
+	at org.apache.dubbo.metadata.definition.TypeDefinitionBuilder.build(TypeDefinitionBuilder.java:57)
+	at org.apache.dubbo.metadata.definition.builder.DefaultTypeBuilder.build(DefaultTypeBuilder.java:56)
+	at org.apache.dubbo.metadata.definition.TypeDefinitionBuilder.build(TypeDefinitionBuilder.java:57)
+	at org.apache.dubbo.metadata.definition.builder.DefaultTypeBuilder.build(DefaultTypeBuilder.java:56)
+	at org.apache.dubbo.metadata.definition.TypeDefinitionBuilder.build(TypeDefinitionBuilder.java:57)
+	at org.apache.dubbo.metadata.definition.builder.DefaultTypeBuilder.build(DefaultTypeBuilder.java:56)
+	at org.apache.dubbo.metadata.definition.TypeDefinitionBuilder.build(TypeDefinitionBuilder.java:57)
+	at org.apache.dubbo.metadata.definition.builder.DefaultTypeBuilder.build(DefaultTypeBuilder.java:56)
+	at org.apache.dubbo.metadata.definition.TypeDefinitionBuilder.build(TypeDefinitionBuilder.java:57)
+	at org.apache.dubbo.metadata.definition.TypeDefinitionBuilder.build(TypeDefinitionBuilder.java:79)
+	at org.apache.dubbo.metadata.definition.ServiceDefinitionBuilder.build(ServiceDefinitionBuilder.java:90)
+	at org.apache.dubbo.metadata.definition.ServiceDefinitionBuilder.buildFullDefinition(ServiceDefinitionBuilder.java:58)
+	at org.apache.dubbo.rpc.model.ReflectionServiceDescriptor.lambda$getFullServiceDefinition$0(ReflectionServiceDescriptor.java:62)
+	at java.base/java.util.concurrent.ConcurrentSkipListMap.computeIfAbsent(ConcurrentSkipListMap.java:1462)
+	at org.apache.dubbo.rpc.model.ReflectionServiceDescriptor.getFullServiceDefinition(ReflectionServiceDescriptor.java:61)
+	at org.apache.dubbo.registry.client.metadata.MetadataUtils.publishServiceDefinition(MetadataUtils.java:70)
+	at org.apache.dubbo.config.ServiceConfig.exportUrl(ServiceConfig.java:773)
+	at org.apache.dubbo.config.ServiceConfig.doExportUrlsFor1Protocol(ServiceConfig.java:554)
+	at org.apache.dubbo.config.ServiceConfig.doExportUrls(ServiceConfig.java:536)
+	at org.apache.dubbo.config.ServiceConfig.doExport(ServiceConfig.java:498)
+	at org.apache.dubbo.config.ServiceConfig.export(ServiceConfig.java:327)
+	at org.apache.dubbo.config.deploy.DefaultModuleDeployer.exportServiceInternal(DefaultModuleDeployer.java:438)
+	at org.apache.dubbo.config.deploy.DefaultModuleDeployer.exportServices(DefaultModuleDeployer.java:393)
+	at org.apache.dubbo.config.deploy.DefaultModuleDeployer.startSync(DefaultModuleDeployer.java:167)
+	at org.apache.dubbo.config.deploy.DefaultModuleDeployer.start(DefaultModuleDeployer.java:148)
+	at org.apache.dubbo.config.spring.context.DubboDeployApplicationListener.onContextRefreshedEvent(DubboDeployApplicationListener.java:155)
+	at org.apache.dubbo.config.spring.context.DubboDeployApplicationListener.onApplicationEvent(DubboDeployApplicationListener.java:141)
+	at org.apache.dubbo.config.spring.context.DubboDeployApplicationListener.onApplicationEvent(DubboDeployApplicationListener.java:52)
+	at org.springframework.context.event.SimpleApplicationEventMulticaster.doInvokeListener(SimpleApplicationEventMulticaster.java:174)
+	at org.springframework.context.event.SimpleApplicationEventMulticaster.invokeListener(SimpleApplicationEventMulticaster.java:167)
+	at org.springframework.context.event.SimpleApplicationEventMulticaster.multicastEvent(SimpleApplicationEventMulticaster.java:145)
+	at org.springframework.context.support.AbstractApplicationContext.publishEvent(AbstractApplicationContext.java:445)
+	at org.springframework.context.support.AbstractApplicationContext.publishEvent(AbstractApplicationContext.java:378)
+	at org.springframework.context.support.AbstractApplicationContext.finishRefresh(AbstractApplicationContext.java:969)
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:619)
+	at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.refresh(ServletWebServerApplicationContext.java:146)
+	at org.springframework.boot.SpringApplication.refresh(SpringApplication.java:738)
+	at org.springframework.boot.SpringApplication.refreshContext(SpringApplication.java:440)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:316)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1306)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1295)
+
+
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.apache.dubbo.metadata.definition.builder;
+
+import org.apache.dubbo.metadata.definition.TypeDefinitionBuilder;
+import org.apache.dubbo.metadata.definition.model.TypeDefinition;
+import org.apache.dubbo.metadata.definition.util.ClassUtils;
+import org.apache.dubbo.metadata.definition.util.JaketConfigurationUtils;
+
+import java.lang.reflect.Field;
+import java.lang.reflect.Type;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * 2015/1/27.
+ */
+public final class DefaultTypeBuilder {
+
+    public static TypeDefinition build(Class<?> clazz, Map<String, TypeDefinition> typeCache) {
+        final String canonicalName = clazz.getCanonicalName();
+
+        // Try to get a cached definition
+        TypeDefinition td = typeCache.get(canonicalName);
+        if (td != null) {
+            return td;
+        }
+        td = new TypeDefinition(canonicalName);
+        typeCache.put(canonicalName, td);
+        // Primitive type
+        if (!JaketConfigurationUtils.needAnalyzing(clazz)) {
+            return td;
+        }
+
+        // Custom type
+        List<Field> fields = ClassUtils.getNonStaticFields(clazz);
+        for (Field field : fields) {
+            String fieldName = field.getName();
+            Class<?> fieldClass = field.getType();
+            Type fieldType = field.getGenericType();
+            TypeDefinition fieldTd = TypeDefinitionBuilder.build(fieldType, fieldClass, typeCache);
+            td.getProperties().put(fieldName, fieldTd.getType());
+        }
+
+        return td;
+    }
+
+    private DefaultTypeBuilder() {}
+}
+ChatGPT said:
+ChatGPT
+It looks like you're encountering a NullPointerException when trying to publish service definitions in Dubbo version 3.2.7. The error is occurring because the type variable is null in the TypeDefinition class, specifically in the isGenericType method.
+
+To help you troubleshoot this issue, here are a few steps you can follow:
+
+Check Your Service Interface: Make sure that your service interface and its methods are correctly defined and do not include any null types. Look for any fields or parameters that may not be initialized properly.
+
+Inspect the Annotations: If you are using any annotations (like @Service or @Reference), ensure they are correctly applied and that any required parameters are provided.
+
+Upgrade/Downgrade Dubbo: Consider trying a different version of Dubbo. If there are known issues with version 3.2.7, upgrading to a newer version or downgrading to a stable version might resolve the issue.
+
+Debugging: You can add logging in the DefaultTypeBuilder class to trace which class is causing the null value. This will help identify the problematic field or type.
+
+Review Dependencies: Ensure that all dependencies in your pom.xml or build.gradle are compatible with Dubbo 3.2.7 and Java 17.
+
+GitHub Issues: Check the Dubbo GitHub repository for any related issues. You might find discussions or solutions that pertain to your problem.
+
+Minimal Reproduction: If the issue persists, try creating a minimal project that reproduces the problem. This can help isolate the issue and make it easier to share with the community for support.
+
+If you need further assistance, providing a minimal code example that reproduces the issue would be helpful!
+
+
+
