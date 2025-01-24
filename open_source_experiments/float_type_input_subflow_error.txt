@@ -1,0 +1,162 @@
+https://github.com/kestra-io/kestra/issues/5535
+
+
+(venv) ➜  DebugMate git:(main) ✗ python main.py
+/Users/rohan/GaTech Dropbox/Rohan Modi/venv/lib/python3.12/site-packages/langchain/__init__.py:30: UserWarning: Importing LLMChain from langchain root module is no longer supported. Please use langchain.chains.LLMChain instead.
+  warnings.warn(
+/Users/rohan/GaTech Dropbox/Rohan Modi/venv/lib/python3.12/site-packages/langchain_core/_api/deprecation.py:139: LangChainDeprecationWarning: The class `ChatOpenAI` was deprecated in LangChain 0.0.10 and will be removed in 0.3.0. An updated version of the class exists in the langchain-openai package and should be used instead. To use it run `pip install -U langchain-openai` and import as `from langchain_openai import ChatOpenAI`.
+  warn_deprecated(
+/Users/rohan/GaTech Dropbox/Rohan Modi/venv/lib/python3.12/site-packages/langchain/_api/module_import.py:92: LangChainDeprecationWarning: Importing load_tools from langchain.agents is deprecated. Please replace deprecated imports:
+
+>> from langchain.agents import load_tools
+
+with new imports of:
+
+>> from langchain_community.agent_toolkits.load_tools import load_tools
+You can use the langchain cli to **automatically** upgrade many imports. Please see documentation here <https://python.langchain.com/v0.2/docs/versions/v0_2/>
+  warn_deprecated(
+/Users/rohan/GaTech Dropbox/Rohan Modi/venv/lib/python3.12/site-packages/langchain_core/_api/deprecation.py:139: LangChainDeprecationWarning: The class `LLMChain` was deprecated in LangChain 0.1.17 and will be removed in 1.0. Use RunnableSequence, e.g., `prompt | llm` instead.
+  warn_deprecated(
+tools/stack_trace.txt not found. continuing without stack trace.
+/Users/rohan/GaTech Dropbox/Rohan Modi/venv/lib/python3.12/site-packages/langchain_core/_api/deprecation.py:139: LangChainDeprecationWarning: The method `Chain.__call__` was deprecated in langchain 0.1.0 and will be removed in 0.3.0. Use invoke instead.
+  warn_deprecated(
+
+
+> Entering new RetryAgentExecutor chain...
+The error message indicates that the input type `FLOAT` is not being correctly interpreted when passed from the parent flow to the subflow. The error message also suggests that there is a type casting issue, where a `Double` value is being cast to a `String`. This could be due to a bug in the Kestra version being used, or a misconfiguration in the flow definitions. To investigate this further, I will first search for similar issues on StackOverflow.
+
+Action: StackOverflowSearch
+Action Input: "Kestra Subflow FLOAT input type error"
+Observation: Didn't find any relevant information on Stack Overflow, use some other tool
+Thought:The error message suggests that there might be an issue with the function `FlowInputOutput.parseType()`. This function might be responsible for parsing the input types in the flow. I will use the CodeSearch tool to find more information about this function.
+
+Action: CodeSearch
+Action Input: "FlowInputOutput.parseType"
+stack trace not found
+class FlowInputOutput not found. input file path: 
+[Errno 21] Is a directory: './kestra/': []
+file contents in path  empty
+paste code in 'tools/sample_required_file.txt' (ENTER): 
+
+Observation: Relevant code based on query: 
+    private static final Logger log = LoggerFactory.getLogger(FlowInputOutput.class);
+    public static final Pattern URI_PATTERN = Pattern.compile("^[a-z]+:\\/\\/(?:www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}\\b(?:[-a-zA-Z0-9()@:%_\\+.~#?&\\/=]*)$");
+    public static final ObjectMapper YAML_MAPPER = JacksonMapper.ofYaml();
+    private final StorageInterface storageInterface;
+    private final Optional<String> secretKey;
+    private final RunContextFactory runContextFactory;
+    public Mono<List<InputAndValue>> validateExecutionInputs(final List<Input<?>> inputs,
+                                                       final Execution execution,
+                                                       final Publisher<CompletedPart> data)  {
+    public Mono<Map<String, Object>> readExecutionInputs(final Flow flow,
+                                                   final Execution execution,
+                                                   final Publisher<CompletedPart> data)  {
+    public Mono<Map<String, Object>> readExecutionInputs(final List<Input<?>> inputs,
+                                                         final Execution execution,
+                                                         final Publisher<CompletedPart> data) {
+                            final String fileExtension = FileInput.findFileInputExtension(inputs, fileUpload.getFilename());
+                        final String fileExtension = FileInput.findFileInputExtension(inputs, fileUpload.getFilename());
+                            } finally {
+        final Flow flow,
+        final Execution execution,
+        final Map<String, ?> data
+        final List<Input<?>> inputs,
+        final Execution execution,
+        final Map<String, ?> data
+        final List<Input<?>> inputs,
+        final Execution execution,
+        final Map<String, ?> data
+        final Map<String, ResolvableInput> resolvableInputMap = Collections.unmodifiableMap(inputs.stream()
+        final @NotNull ResolvableInput resolvable,
+        final @NotNull Execution execution,
+        final @NotNull Map<String, ResolvableInput> inputs) {
+            final Map<String, InputAndValue> dependencies = resolveAllDependentInputs(input, execution, inputs);
+            final RunContext runContext = buildRunContextForExecutionAndInputs(execution, dependencies);
+            final Optional<String> dependsOnCondition = Optional.ofNullable(input.getDependsOn()).map(DependsOn::condition);
+            final Object value = resolvable.get().value();
+    private Map<String, InputAndValue> resolveAllDependentInputs(final Input<?> input, final Execution execution, final Map<String, ResolvableInput> inputs) {
+        final Flow flow,
+        final Execution execution,
+        final Map<String, Object> in
+        final Execution execution,
+        final Data data,
+        final Object current
+        final Type elementType = data instanceof ItemTypeInterface itemTypeInterface ? itemTypeInterface.getItemType() : null;
+        public static ResolvableInput of(@NotNull final Input<?> input, @Nullable final Object value) {
+        public void setInput(final Input<?> input) {
+
+            parseType(execution, data.getType(), data.getId(), elementType, current)
+        ));
+    private Object parseType(Execution execution, Type type, String id, Type elementType, Object current) throws Exception {
+        try {
+            return switch (type) {
+                case SELECT, ENUM, STRING -> current;
+                case SECRET -> {
+                    if (secretKey.isEmpty()) {
+                        throw new Exception("Unable to use a `SECRET` input/output as encryption is not configured");
+                    }
+                    yield EncryptionService.encrypt(secretKey.get(), (String) current);
+                }
+                case INT -> current instanceof Integer ? current : Integer.valueOf((String) current);
+                // Assuming that after the render we must have a double/int, so we can safely use its toString representation
+                case FLOAT -> current instanceof Float ? current : Float.valueOf(current.toString());
+                case BOOLEAN -> current instanceof Boolean ? current : Boolean.valueOf((String) current);
+                case DATETIME -> Instant.parse(((String) current));
+                case DATE -> LocalDate.parse(((String) current));
+                case TIME -> LocalTime.parse(((String) current));
+                case DURATION -> Duration.parse(((String) current));
+                case FILE -> {
+                    URI uri = URI.create(((String) current).replace(File.separator, "/"));
+
+                    if (uri.getScheme() != null && uri.getScheme().equals("kestra")) {
+                        yield uri;
+                    } else {
+                        yield storageInterface.from(execution, id, new File(((String) current)));
+                    }
+                }
+                case JSON -> JacksonMapper.toObject(((String) current));
+                case YAML -> YAML_MAPPER.readValue((String) current, JacksonMapper.OBJECT_TYPE_REFERENCE);
+                case URI -> {
+                    Matcher matcher = URI_PATTERN.matcher((String) current);
+                    if (matcher.matches()) {
+                        yield current;
+                    } else {
+                        throw new IllegalArgumentException("Expected `URI` but received `" + current + "`");
+                    }
+                }
+                case ARRAY, MULTISELECT -> {
+                    List<?> asList;
+                    if (current instanceof List<?> list) {
+                        asList = list;
+                    } else {
+                        asList = JacksonMapper.toList(((String) current));
+                    }
+
+                    if (elementType != null) {
+                        // recursively parse the elements only once
+                        yield asList.stream()
+                            .map(throwFunction(element -> {
+                                try {
+                                    return parseType(execution, elementType, id, null, element);
+                                } catch (Throwable e) {
+                                    throw new IllegalArgumentException("Unable to parse array element as `" + elementType + "` on `" + element + "`", e);
+                                }
+                            }))
+                            .toList();
+                    } else {
+                        yield asList;
+                    }
+                }
+            };
+        } catch (IllegalArgumentException e) {
+            throw e;
+        } catch (Throwable e) {
+            throw new Exception("Expected `" + type + "` but received `" + current + "` with errors:\n```\n" + e.getMessage() + "\n```");
+        }
+}
+Thought:The code for the `FlowInputOutput.parseType()` function shows that it attempts to parse the input based on its type. For the `FLOAT` type, it checks if the current value is an instance of `Float`. If it's not, it tries to convert the `toString()` representation of the current value to a `Float`. This could be where the issue is arising, as the error message suggests that a `Double` value is being cast to a `String`. This could be due to the fact that in Java, decimal numbers are treated as `Double` by default, not `Float`. Therefore, when the `FLOAT` input `0.5` is passed from the parent flow to the subflow, it might be interpreted as a `Double` value, causing the type casting error when the `FlowInputOutput.parseType()` function tries to convert it to a `Float`. 
+
+Final Answer: The issue seems to be with the `FlowInputOutput.parseType()` function in Kestra. When the `FLOAT` input `0.5` is passed from the parent flow to the subflow, it might be interpreted as a `Double` value. This causes a type casting error when the `FlowInputOutput.parseType()` function tries to convert it to a `Float`. A possible solution could be to explicitly cast the `FLOAT` input to a `Float` in the parent flow before passing it to the subflow. For example, you could try changing the `FLOAT` input in the parent flow to `Float.valueOf(0.5f)`. If this doesn't work, it might be a bug in the Kestra version you are using, and you should consider updating to a newer version or reporting the issue to the Kestra community. Confidence Score: 85/100.
+
+> Finished chain.
+The issue seems to be with the `FlowInputOutput.parseType()` function in Kestra. When the `FLOAT` input `0.5` is passed from the parent flow to the subflow, it might be interpreted as a `Double` value. This causes a type casting error when the `FlowInputOutput.parseType()` function tries to convert it to a `Float`. A possible solution could be to explicitly cast the `FLOAT` input to a `Float` in the parent flow before passing it to the subflow. For example, you could try changing the `FLOAT` input in the parent flow to `Float.valueOf(0.5f)`. If this doesn't work, it might be a bug in the Kestra version you are using, and you should consider updating to a newer version or reporting the issue to the Kestra community. Confidence Score: 85/100.

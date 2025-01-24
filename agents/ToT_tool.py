@@ -46,7 +46,7 @@ class ToTTool(BaseTool):
             user_input = input("S to skip: ")
             if user_input == "S":
                 continue
-            agent = agents.debugmate_agent.MongoAgent(
+            agent = agents.debugmate_agent.DebugMateAgent(
                 model="gpt-4-0613", temp=0.1, streaming=False
             )
             prompt = query["prompt"] + "\n\n" + prompt + "\n\n" + eval_prompt

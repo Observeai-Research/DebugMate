@@ -4,7 +4,6 @@ import requests
 from bs4 import BeautifulSoup
 from googlesearch import search
 
-
 class StackOverflowTool(BaseTool):
     name = "StackOverflowSearch"
     description = (
@@ -21,7 +20,7 @@ class StackOverflowTool(BaseTool):
         """Executes a search on Stack Overflow based on the query."""
         search_results = list(
             search(
-                "site:stackoverflow.com " + query, tld="co.in", num=1, stop=1, pause=2
+                "site:stackoverflow.com " + query, num_results=1
             )
         )
         # most_relevant_question_link = self.search_stack_overflow(query)

@@ -39,6 +39,17 @@ export EMAIL_ADDRESS="<your_confluence_email_address>"
     python tools/code_loader.py
     ```
 
+3. **Include new code bases to process**: 
+    - run 
+    ```sh
+    cd tools
+    ```
+    - Within convertjar.py replace `<absolute_directory_path> ` with the absolute path of the compiled jar of your codebase
+    ```sh
+    python covertjar.py
+    ```
+    this produces the decompiled code within temp_java 
+
 ## Usage
 
 **Update Stack Trace**: Place your stack trace in the stack_trace.txt file. This file will be used as input for the debugging process when provided.
@@ -55,6 +66,7 @@ Uses advanced Retrieval-Augmented Generation (RAG) to locate and return the most
 
 - **Code Search:**
 Takes a string representing class name and construct name as input to find exact matches. Utilizes a vertical Path Tool to map class names from stack trace to file locations and uses an AST to map field objects to their respective class types.
+if asked to input file path give the path after temp_java/ from the path
 
 - **Online Developer Portal (DP) Search:**
 Queries search engines with specific issue details, utilizing results from platforms like StackOverflow to find optimal solutions. Creates parse trees from HTML documents to extract relevant information that answers the questions queried.

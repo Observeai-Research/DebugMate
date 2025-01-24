@@ -1,0 +1,359 @@
+
+github issue: https://github.com/opensearch-project/OpenSearch/pull/15988
+https://github.com/opensearch-project/OpenSearch/issues/5035
+Prompt:
+"""
+    Explain why this bug is happening and suggest what changes I should make.
+    
+    The index level setting index.number_of_routing_shards can be set at the index creation time, but if it is set to null explicitly, the value is different from the value when it's not set.
+    Related component
+    Indexing
+
+    To Reproduce
+    Set to null
+    DELETE abc
+
+    PUT abc
+    {
+    "settings": {
+        "index.number_of_routing_shards":null,
+        "index.number_of_shards":"2"
+    }
+    }
+
+    GET _cluster/state/metadata/abc
+    , we can see routing_num_shards is 2, equals to the number_of_shards, but not correct because we cannot split the index anymore.
+
+    Not set
+    DELETE abc
+
+    PUT abc
+    {
+    "settings": {
+        "index.number_of_shards":"2"
+    }
+    }
+
+    GET _cluster/state/metadata/abc
+    we can see routing_num_shards is 1024, this value is correct.
+
+    Expected behavior
+    When the setting is set to null, the value of routing_num_shards should be same to the value when it's not set.
+start debugging with the SearchAsYouTypeFieldMapper class SearchAsYouTypeFieldMapper function.
+"""
+
+
+was not able to complete
+------------------------------------------------------------------------------------------------------------------
+env) ➜  DebugMate git:(main) ✗ python main.py
+/Users/navtej.reddy/obs_workspace/DebugMate/env/lib/python3.12/site-packages/langchain/__init__.py:30: UserWarning: Importing LLMChain from langchain root module is no longer supported. Please use langchain.chains.LLMChain instead.
+  warnings.warn(
+/Users/navtej.reddy/obs_workspace/DebugMate/env/lib/python3.12/site-packages/langchain_core/_api/deprecation.py:139: LangChainDeprecationWarning: The class `ChatOpenAI` was deprecated in LangChain 0.0.10 and will be removed in 0.3.0. An updated version of the class exists in the langchain-openai package and should be used instead. To use it run `pip install -U langchain-openai` and import as `from langchain_openai import ChatOpenAI`.
+  warn_deprecated(
+/Users/navtej.reddy/obs_workspace/DebugMate/env/lib/python3.12/site-packages/langchain/_api/module_import.py:92: LangChainDeprecationWarning: Importing load_tools from langchain.agents is deprecated. Please replace deprecated imports:
+
+>> from langchain.agents import load_tools
+
+with new imports of:
+
+>> from langchain_community.agent_toolkits.load_tools import load_tools
+You can use the langchain cli to **automatically** upgrade many imports. Please see documentation here <https://python.langchain.com/v0.2/docs/versions/v0_2/>
+  warn_deprecated(
+/Users/navtej.reddy/obs_workspace/DebugMate/env/lib/python3.12/site-packages/langchain_core/_api/deprecation.py:139: LangChainDeprecationWarning: The class `LLMChain` was deprecated in LangChain 0.1.17 and will be removed in 1.0. Use RunnableSequence, e.g., `prompt | llm` instead.
+  warn_deprecated(
+tools/stack_trace.txt not found. continuing without stack trace.
+/Users/navtej.reddy/obs_workspace/DebugMate/env/lib/python3.12/site-packages/langchain_core/_api/deprecation.py:139: LangChainDeprecationWarning: The method `Chain.__call__` was deprecated in langchain 0.1.0 and will be removed in 0.3.0. Use invoke instead.
+  warn_deprecated(
+
+
+> Entering new RetryAgentExecutor chain...
+The user is experiencing a bug where setting "index.number_of_routing_shards" to null results in a different behavior than not setting it at all. The user has provided a specific class and function to start debugging with: "SearchAsYouTypeFieldMapper". I will start by using the CodeSearch tool to find the implementation details of the "SearchAsYouTypeFieldMapper" function.
+
+Action: CodeSearch
+Action Input: SearchAsYouTypeFieldMapper.SearchAsYouTypeFieldMapper
+stack trace not found
+../Opensearch/modules/mapper-extras/src/main/java/org/opensearch/index/mapper/SearchAsYouTypeFieldMapper.java
+adding imports
+no. of lines in function: 693
+paste function in 'tools/sample_required_file.txt' (ENTER): 
+
+Observation: Relevant code based on query: 
+
+@Override
+        public SearchAsYouTypeFieldMapper build(Mapper.BuilderContext context) {
+
+            FieldType fieldType = new FieldType();
+            fieldType.setIndexOptions(TextParams.toIndexOptions(index.getValue(), indexOptions.getValue()));
+            fieldType.setOmitNorms(norms.getValue() == false);
+            fieldType.setStored(store.getValue());
+            TextParams.setTermVectorParams(termVectors.getValue(), fieldType);
+
+            NamedAnalyzer indexAnalyzer = analyzers.getIndexAnalyzer();
+            NamedAnalyzer searchAnalyzer = analyzers.getSearchAnalyzer();
+
+            SearchAsYouTypeFieldType ft = new SearchAsYouTypeFieldType(
+                buildFullName(context),
+                fieldType,
+                similarity.getValue(),
+                analyzers.getSearchAnalyzer(),
+                analyzers.getSearchQuoteAnalyzer(),
+                meta.getValue()
+            );
+            ft.setIndexAnalyzer(analyzers.getIndexAnalyzer());
+
+            // set up the prefix field
+            FieldType prefixft = new FieldType();
+            prefixft.setIndexOptions(fieldType.indexOptions());
+            prefixft.setOmitNorms(true);
+            prefixft.setStored(false);
+            final String fullName = buildFullName(context);
+            // wrap the root field's index analyzer with shingles and edge ngrams
+            final Analyzer prefixIndexWrapper = SearchAsYouTypeAnalyzer.withShingleAndPrefix(
+                indexAnalyzer.analyzer(),
+                maxShingleSize.getValue()
+            );
+            // wrap the root field's search analyzer with only shingles
+            final NamedAnalyzer prefixSearchWrapper = new NamedAnalyzer(
+                searchAnalyzer.name(),
+                searchAnalyzer.scope(),
+                SearchAsYouTypeAnalyzer.withShingle(searchAnalyzer.analyzer(), maxShingleSize.getValue())
+            );
+            // don't wrap the root field's search quote analyzer as prefix field doesn't support phrase queries
+            TextSearchInfo prefixSearchInfo = new TextSearchInfo(prefixft, similarity.getValue(), prefixSearchWrapper, searchAnalyzer);
+            final PrefixFieldType prefixFieldType = new PrefixFieldType(fullName, prefixSearchInfo, Defaults.MIN_GRAM, Defaults.MAX_GRAM);
+            prefixFieldType.setIndexAnalyzer(new NamedAnalyzer(indexAnalyzer.name(), AnalyzerScope.INDEX, prefixIndexWrapper));
+            final PrefixFieldMapper prefixFieldMapper = new PrefixFieldMapper(prefixft, prefixFieldType);
+
+            // set up the shingle fields
+            final ShingleFieldMapper[] shingleFieldMappers = new ShingleFieldMapper[maxShingleSize.getValue() - 1];
+            final ShingleFieldType[] shingleFieldTypes = new ShingleFieldType[maxShingleSize.getValue() - 1];
+            for (int i = 0; i < shingleFieldMappers.length; i++) {
+                final int shingleSize = i + 2;
+                FieldType shingleft = new FieldType(fieldType);
+                shingleft.setStored(false);
+                String fieldName = getShingleFieldName(buildFullName(context), shingleSize);
+                // wrap the root field's index, search, and search quote analyzers with shingles
+                final SearchAsYouTypeAnalyzer shingleIndexWrapper = SearchAsYouTypeAnalyzer.withShingle(
+                    indexAnalyzer.analyzer(),
+                    shingleSize
+                );
+                final NamedAnalyzer shingleSearchWrapper = new NamedAnalyzer(
+                    searchAnalyzer.name(),
+                    searchAnalyzer.scope(),
+                    SearchAsYouTypeAnalyzer.withShingle(searchAnalyzer.analyzer(), shingleSize)
+                );
+                final NamedAnalyzer shingleSearchQuoteWrapper = new NamedAnalyzer(
+                    searchAnalyzer.name(),
+                    searchAnalyzer.scope(),
+                    SearchAsYouTypeAnalyzer.withShingle(searchAnalyzer.analyzer(), shingleSize)
+                );
+                TextSearchInfo textSearchInfo = new TextSearchInfo(
+                    shingleft,
+                    similarity.getValue(),
+                    shingleSearchWrapper,
+                    shingleSearchQuoteWrapper
+                );
+                final ShingleFieldType shingleFieldType = new ShingleFieldType(fieldName, shingleSize, textSearchInfo);
+                shingleFieldType.setIndexAnalyzer(new NamedAnalyzer(indexAnalyzer.name(), AnalyzerScope.INDEX, shingleIndexWrapper));
+                shingleFieldType.setPrefixFieldType(prefixFieldType);
+                shingleFieldTypes[i] = shingleFieldType;
+                shingleFieldMappers[i] = new ShingleFieldMapper(shingleft, shingleFieldType);
+            }
+            ft.setPrefixField(prefixFieldType);
+            ft.setShingleFields(shingleFieldTypes);
+            return new SearchAsYouTypeFieldMapper(name, ft, copyTo.build(), prefixFieldMapper, shingleFieldMappers, this);
+        }
+    }
+Thought:The code for the SearchAsYouTypeFieldMapper function doesn't seem to directly relate to the issue of setting "index.number_of_routing_shards" to null. However, it might be calling other functions that could be causing the issue. I will use the ToT_tool to go deeper into the functions called in the SearchAsYouTypeFieldMapper function.
+
+Action: ToT_tool
+Action Input: {"prompt": "The index level setting index.number_of_routing_shards can be set at the index creation time, but if it is set to null explicitly, the value is different from the value when it's not set. The issue is being debugged starting with the SearchAsYouTypeFieldMapper function.", "query 1": "SearchAsYouTypeFieldMapper.build", "query 2": "SearchAsYouTypeAnalyzer.withShingleAndPrefix", "query 3": "SearchAsYouTypeAnalyzer.withShingle"}
+
+Tree of Thought Queries:
+The index level setting index.number_of_routing_shards can be set at the index creation time, but if it is set to null explicitly, the value is different from the value when it's not set. The issue is being debugged starting with the SearchAsYouTypeFieldMapper function.
+         query 1: SearchAsYouTypeFieldMapper.build
+         query 2: SearchAsYouTypeAnalyzer.withShingleAndPrefix
+         query 3: SearchAsYouTypeAnalyzer.withShingle
+Add another query (ENTER if nothing to add): 
+ToT new_tree query prompt: SearchAsYouTypeFieldMapper.build
+S to skip: S
+ToT new_tree query prompt: SearchAsYouTypeAnalyzer.withShingleAndPrefix
+S to skip: 
+/Users/navtej.reddy/obs_workspace/DebugMate/env/lib/python3.12/site-packages/langchain/_api/module_import.py:92: LangChainDeprecationWarning: Importing load_tools from langchain.agents is deprecated. Please replace deprecated imports:
+
+>> from langchain.agents import load_tools
+
+with new imports of:
+
+>> from langchain_community.agent_toolkits.load_tools import load_tools
+You can use the langchain cli to **automatically** upgrade many imports. Please see documentation here <https://python.langchain.com/v0.2/docs/versions/v0_2/>
+  warn_deprecated(
+
+
+> Entering new RetryAgentExecutor chain...
+Thought: The code for the SearchAsYouTypeFieldMapper function has been found. It seems to be setting up various fields and analyzers, including the SearchAsYouTypeAnalyzer.withShingleAndPrefix function. To understand how this function might be related to the issue, I need to find its implementation details. 
+
+Action: CodeSearch
+Action Input: SearchAsYouTypeAnalyzer.withShingleAndPrefix
+stack trace not found
+class SearchAsYouTypeAnalyzer not found. input file path: ../../../OpenSearch/modules/mapper-extras/src/main/java/org/opensearch/index/mapper/SearchAsYouTypeFieldMapper.java
+[Errno 2] No such file or directory: '../Opensearch/../../../OpenSearch/modules/mapper-extras/src/main/java/org/opensearch/index/mapper/SearchAsYouTypeFieldMapper.java': []
+file contents in path ../../../OpenSearch/modules/mapper-extras/src/main/java/org/opensearch/index/mapper/SearchAsYouTypeFieldMapper.java empty
+paste code in 'tools/sample_required_file.txt' (ENTER): 
+implementation class SearchAsYouTypeAnalyzer not found. input interface implementation file path: ../../../OpenSearch/modules/mapper-extras/src/main/java/org/opensearch/index/mapper/SearchAsYouTypeFieldMapper.java
+[Errno 2] No such file or directory: '../Opensearch/../../../OpenSearch/modules/mapper-extras/src/main/java/org/opensearch/index/mapper/SearchAsYouTypeFieldMapper.java': []
+file contents in path ../../../OpenSearch/modules/mapper-extras/src/main/java/org/opensearch/index/mapper/SearchAsYouTypeFieldMapper.java empty
+paste code in 'tools/sample_required_file.txt' (ENTER): 
+no. of lines in function: 1
+paste function in 'tools/sample_required_file.txt' (ENTER): 
+
+Observation: Relevant code based on query: 
+
+      static SearchAsYouTypeAnalyzer withShingleAndPrefix(Analyzer delegate, int shingleSize) {
+            return new SearchAsYouTypeAnalyzer(delegate, shingleSize, true);
+        }
+
+Thought:The function "SearchAsYouTypeAnalyzer.withShingleAndPrefix" is a simple wrapper for the constructor of "SearchAsYouTypeAnalyzer". It doesn't seem to directly interact with the "index.number_of_routing_shards" setting. However, it's possible that the "SearchAsYouTypeAnalyzer" constructor or the "delegate" parameter could be related to the issue. I will use the ToT_tool to investigate these possibilities.
+
+Action: ToT_tool
+Action Input: {"prompt": "The index level setting index.number_of_routing_shards can be set at the index creation time, but if it is set to null explicitly, the value is different from the value when it's not set. The issue is being debugged starting with the SearchAsYouTypeFieldMapper function.", "query 1": "SearchAsYouTypeAnalyzer.SearchAsYouTypeAnalyzer", "query 2": "Analyzer.Analyzer"}
+
+Tree of Thought Queries:
+The index level setting index.number_of_routing_shards can be set at the index creation time, but if it is set to null explicitly, the value is different from the value when it's not set. The issue is being debugged starting with the SearchAsYouTypeFieldMapper function.
+         query 1: SearchAsYouTypeAnalyzer.SearchAsYouTypeAnalyzer
+         query 2: Analyzer.Analyzer
+Add another query (ENTER if nothing to add): 
+ToT new_tree query prompt: SearchAsYouTypeAnalyzer.SearchAsYouTypeAnalyzer
+S to skip: 
+/Users/navtej.reddy/obs_workspace/DebugMate/env/lib/python3.12/site-packages/langchain/_api/module_import.py:92: LangChainDeprecationWarning: Importing load_tools from langchain.agents is deprecated. Please replace deprecated imports:
+
+>> from langchain.agents import load_tools
+
+with new imports of:
+
+>> from langchain_community.agent_toolkits.load_tools import load_tools
+You can use the langchain cli to **automatically** upgrade many imports. Please see documentation here <https://python.langchain.com/v0.2/docs/versions/v0_2/>
+  warn_deprecated(
+
+
+> Entering new RetryAgentExecutor chain...
+The code for the SearchAsYouTypeAnalyzer.withShingleAndPrefix function has been found. It seems to be a simple function that creates a new SearchAsYouTypeAnalyzer. To understand how this might be related to the issue, I need to find the implementation details of the SearchAsYouTypeAnalyzer constructor.
+
+Action: CodeSearch
+Action Input: SearchAsYouTypeAnalyzer.SearchAsYouTypeAnalyzer
+stack trace not found
+class SearchAsYouTypeAnalyzer not found. input file path: ../../../OpenSearch/modules/mapper-extras/src/main/java/org/opensearch/index/mapper/SearchAsYouTypeFieldMapper.java
+[Errno 2] No such file or directory: '../Opensearch/../../../OpenSearch/modules/mapper-extras/src/main/java/org/opensearch/index/mapper/SearchAsYouTypeFieldMapper.java': []
+file contents in path ../../../OpenSearch/modules/mapper-extras/src/main/java/org/opensearch/index/mapper/SearchAsYouTypeFieldMapper.java empty
+paste code in 'tools/sample_required_file.txt' (ENTER): 
+implementation class SearchAsYouTypeAnalyzer not found. input interface implementation file path: ../../../OpenSearch/modules/mapper-extras/src/main/java/org/opensearch/index/mapper/SearchAsYouTypeFieldMapper.java
+[Errno 2] No such file or directory: '../Opensearch/../../../OpenSearch/modules/mapper-extras/src/main/java/org/opensearch/index/mapper/SearchAsYouTypeFieldMapper.java': []
+file contents in path ../../../OpenSearch/modules/mapper-extras/src/main/java/org/opensearch/index/mapper/SearchAsYouTypeFieldMapper.java empty
+Thought:The code for the SearchAsYouTypeAnalyzer constructor has been found. It seems to be a simple function that creates a new SearchAsYouTypeAnalyzer. However, none of the functions I've looked at so far seem to be directly related to the "index.number_of_routing_shards" setting. I need to find out where this setting is being used or modified. Since the user didn't provide any specific function or class names related to this setting, I'll use the StackOverflowSearch tool to find more information.
+
+Action: StackOverflowSearch
+Action Input: Elasticsearch index.number_of_routing_shards usageTraceback (most recent call last):
+  File "/Users/navtej.reddy/obs_workspace/DebugMate/main.py", line 31, in <module>
+    debugmate_agent.run("""
+  File "/Users/navtej.reddy/obs_workspace/DebugMate/agents/debugmate_agent.py", line 87, in run
+    outputs = self.agent_executor({"input": prompt})
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/navtej.reddy/obs_workspace/DebugMate/env/lib/python3.12/site-packages/langchain_core/_api/deprecation.py", line 168, in warning_emitting_wrapper
+    return wrapped(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/navtej.reddy/obs_workspace/DebugMate/env/lib/python3.12/site-packages/langchain/chains/base.py", line 383, in __call__
+    return self.invoke(
+           ^^^^^^^^^^^^
+  File "/Users/navtej.reddy/obs_workspace/DebugMate/env/lib/python3.12/site-packages/langchain/chains/base.py", line 166, in invoke
+    raise e
+  File "/Users/navtej.reddy/obs_workspace/DebugMate/env/lib/python3.12/site-packages/langchain/chains/base.py", line 156, in invoke
+    self._call(inputs, run_manager=run_manager)
+  File "/Users/navtej.reddy/obs_workspace/DebugMate/agents/mrkl_executor.py", line 102, in _call
+    next_step_output = self._take_next_step(
+                       ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/navtej.reddy/obs_workspace/DebugMate/env/lib/python3.12/site-packages/langchain/agents/agent.py", line 1318, in _take_next_step
+    [
+  File "/Users/navtej.reddy/obs_workspace/DebugMate/env/lib/python3.12/site-packages/langchain/agents/agent.py", line 1403, in _iter_next_step
+    yield self._perform_agent_action(
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/navtej.reddy/obs_workspace/DebugMate/env/lib/python3.12/site-packages/langchain/agents/agent.py", line 1425, in _perform_agent_action
+    observation = tool.run(
+                  ^^^^^^^^^
+  File "/Users/navtej.reddy/obs_workspace/DebugMate/env/lib/python3.12/site-packages/langchain_core/tools.py", line 615, in run
+    raise error_to_raise
+  File "/Users/navtej.reddy/obs_workspace/DebugMate/env/lib/python3.12/site-packages/langchain_core/tools.py", line 584, in run
+    response = context.run(self._run, *tool_args, **tool_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/navtej.reddy/obs_workspace/DebugMate/agents/ToT_tool.py", line 53, in _run
+    response = agent.run(prompt)
+               ^^^^^^^^^^^^^^^^^
+  File "/Users/navtej.reddy/obs_workspace/DebugMate/agents/debugmate_agent.py", line 87, in run
+    outputs = self.agent_executor({"input": prompt})
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/navtej.reddy/obs_workspace/DebugMate/env/lib/python3.12/site-packages/langchain_core/_api/deprecation.py", line 168, in warning_emitting_wrapper
+    return wrapped(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/navtej.reddy/obs_workspace/DebugMate/env/lib/python3.12/site-packages/langchain/chains/base.py", line 383, in __call__
+    return self.invoke(
+           ^^^^^^^^^^^^
+  File "/Users/navtej.reddy/obs_workspace/DebugMate/env/lib/python3.12/site-packages/langchain/chains/base.py", line 166, in invoke
+    raise e
+  File "/Users/navtej.reddy/obs_workspace/DebugMate/env/lib/python3.12/site-packages/langchain/chains/base.py", line 156, in invoke
+    self._call(inputs, run_manager=run_manager)
+  File "/Users/navtej.reddy/obs_workspace/DebugMate/agents/mrkl_executor.py", line 102, in _call
+    next_step_output = self._take_next_step(
+                       ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/navtej.reddy/obs_workspace/DebugMate/env/lib/python3.12/site-packages/langchain/agents/agent.py", line 1318, in _take_next_step
+    [
+  File "/Users/navtej.reddy/obs_workspace/DebugMate/env/lib/python3.12/site-packages/langchain/agents/agent.py", line 1403, in _iter_next_step
+    yield self._perform_agent_action(
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/navtej.reddy/obs_workspace/DebugMate/env/lib/python3.12/site-packages/langchain/agents/agent.py", line 1425, in _perform_agent_action
+    observation = tool.run(
+                  ^^^^^^^^^
+  File "/Users/navtej.reddy/obs_workspace/DebugMate/env/lib/python3.12/site-packages/langchain_core/tools.py", line 615, in run
+    raise error_to_raise
+  File "/Users/navtej.reddy/obs_workspace/DebugMate/env/lib/python3.12/site-packages/langchain_core/tools.py", line 584, in run
+    response = context.run(self._run, *tool_args, **tool_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/navtej.reddy/obs_workspace/DebugMate/agents/ToT_tool.py", line 53, in _run
+    response = agent.run(prompt)
+               ^^^^^^^^^^^^^^^^^
+  File "/Users/navtej.reddy/obs_workspace/DebugMate/agents/debugmate_agent.py", line 87, in run
+    outputs = self.agent_executor({"input": prompt})
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/navtej.reddy/obs_workspace/DebugMate/env/lib/python3.12/site-packages/langchain_core/_api/deprecation.py", line 168, in warning_emitting_wrapper
+    return wrapped(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/navtej.reddy/obs_workspace/DebugMate/env/lib/python3.12/site-packages/langchain/chains/base.py", line 383, in __call__
+    return self.invoke(
+           ^^^^^^^^^^^^
+  File "/Users/navtej.reddy/obs_workspace/DebugMate/env/lib/python3.12/site-packages/langchain/chains/base.py", line 166, in invoke
+    raise e
+  File "/Users/navtej.reddy/obs_workspace/DebugMate/env/lib/python3.12/site-packages/langchain/chains/base.py", line 156, in invoke
+    self._call(inputs, run_manager=run_manager)
+  File "/Users/navtej.reddy/obs_workspace/DebugMate/agents/mrkl_executor.py", line 102, in _call
+    next_step_output = self._take_next_step(
+                       ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/navtej.reddy/obs_workspace/DebugMate/env/lib/python3.12/site-packages/langchain/agents/agent.py", line 1318, in _take_next_step
+    [
+  File "/Users/navtej.reddy/obs_workspace/DebugMate/env/lib/python3.12/site-packages/langchain/agents/agent.py", line 1403, in _iter_next_step
+    yield self._perform_agent_action(
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/navtej.reddy/obs_workspace/DebugMate/env/lib/python3.12/site-packages/langchain/agents/agent.py", line 1425, in _perform_agent_action
+    observation = tool.run(
+                  ^^^^^^^^^
+  File "/Users/navtej.reddy/obs_workspace/DebugMate/env/lib/python3.12/site-packages/langchain_core/tools.py", line 615, in run
+    raise error_to_raise
+  File "/Users/navtej.reddy/obs_workspace/DebugMate/env/lib/python3.12/site-packages/langchain_core/tools.py", line 584, in run
+    response = context.run(self._run, *tool_args, **tool_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/navtej.reddy/obs_workspace/DebugMate/tools/stackoverflowtool.py", line 30, in _run
+    question_content = self.fetch_question_content(most_relevant_question_link)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/navtej.reddy/obs_workspace/DebugMate/tools/stackoverflowtool.py", line 63, in fetch_question_content
+    .find("div", class_="js-post-body")
+     ^^^^
+AttributeError: 'NoneType' object has no attribute 'find'
+(env) ➜  DebugMate git:(main) ✗ 
+

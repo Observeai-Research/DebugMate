@@ -1,0 +1,245 @@
+Actually utilised all tools
+
+(env) ➜  DebugMate git:(main) ✗ python main.py             
+/Users/navtej.reddy/obs_workspace/DebugMate/env/lib/python3.12/site-packages/langchain/__init__.py:30: UserWarning: Importing LLMChain from langchain root module is no longer supported. Please use langchain.chains.LLMChain instead.
+  warnings.warn(
+/Users/navtej.reddy/obs_workspace/DebugMate/env/lib/python3.12/site-packages/langchain_core/_api/deprecation.py:139: LangChainDeprecationWarning: The class `ChatOpenAI` was deprecated in LangChain 0.0.10 and will be removed in 0.3.0. An updated version of the class exists in the langchain-openai package and should be used instead. To use it run `pip install -U langchain-openai` and import as `from langchain_openai import ChatOpenAI`.
+  warn_deprecated(
+/Users/navtej.reddy/obs_workspace/DebugMate/env/lib/python3.12/site-packages/langchain/_api/module_import.py:92: LangChainDeprecationWarning: Importing load_tools from langchain.agents is deprecated. Please replace deprecated imports:
+
+>> from langchain.agents import load_tools
+
+with new imports of:
+
+>> from langchain_community.agent_toolkits.load_tools import load_tools
+You can use the langchain cli to **automatically** upgrade many imports. Please see documentation here <https://python.langchain.com/v0.2/docs/versions/v0_2/>
+  warn_deprecated(
+/Users/navtej.reddy/obs_workspace/DebugMate/env/lib/python3.12/site-packages/langchain_core/_api/deprecation.py:139: LangChainDeprecationWarning: The class `LLMChain` was deprecated in LangChain 0.1.17 and will be removed in 1.0. Use RunnableSequence, e.g., `prompt | llm` instead.
+  warn_deprecated(
+tools/stack_trace.txt not found. continuing without stack trace.
+/Users/navtej.reddy/obs_workspace/DebugMate/env/lib/python3.12/site-packages/langchain_core/_api/deprecation.py:139: LangChainDeprecationWarning: The method `Chain.__call__` was deprecated in langchain 0.1.0 and will be removed in 0.3.0. Use invoke instead.
+  warn_deprecated(
+
+
+> Entering new RetryAgentExecutor chain...
+The user has provided a detailed description of the bug they're experiencing, including the steps to reproduce it. They've also mentioned a specific class and function to start debugging with - the SearchAsYouTypeFieldMapper class and its function. Given this information, the first step should be to use the CodeSearch tool to examine the mentioned class and function.
+
+Action: CodeSearch
+Action Input: SearchAsYouTypeFieldMapper.SearchAsYouTypeFieldMapper
+stack trace not found
+../Opensearch/modules/mapper-extras/src/main/java/org/opensearch/index/mapper/SearchAsYouTypeFieldMapper.java
+adding imports
+no. of lines in function: 693
+paste function in 'tools/sample_required_file.txt' (ENTER): 
+
+Observation: Relevant code based on query: 
+
+       @Override
+        public SearchAsYouTypeFieldMapper build(Mapper.BuilderContext context) {
+
+            FieldType fieldType = new FieldType();
+            fieldType.setIndexOptions(TextParams.toIndexOptions(index.getValue(), indexOptions.getValue()));
+            fieldType.setOmitNorms(norms.getValue() == false);
+            fieldType.setStored(store.getValue());
+            TextParams.setTermVectorParams(termVectors.getValue(), fieldType);
+
+            NamedAnalyzer indexAnalyzer = analyzers.getIndexAnalyzer();
+            NamedAnalyzer searchAnalyzer = analyzers.getSearchAnalyzer();
+
+            SearchAsYouTypeFieldType ft = new SearchAsYouTypeFieldType(
+                buildFullName(context),
+                fieldType,
+                similarity.getValue(),
+                analyzers.getSearchAnalyzer(),
+                analyzers.getSearchQuoteAnalyzer(),
+                meta.getValue()
+            );
+            ft.setIndexAnalyzer(analyzers.getIndexAnalyzer());
+
+            // set up the prefix field
+            FieldType prefixft = new FieldType();
+            prefixft.setIndexOptions(fieldType.indexOptions());
+            prefixft.setOmitNorms(true);
+            prefixft.setStored(false);
+            final String fullName = buildFullName(context);
+            // wrap the root field's index analyzer with shingles and edge ngrams
+            final Analyzer prefixIndexWrapper = SearchAsYouTypeAnalyzer.withShingleAndPrefix(
+                indexAnalyzer.analyzer(),
+                maxShingleSize.getValue()
+            );
+            // wrap the root field's search analyzer with only shingles
+            final NamedAnalyzer prefixSearchWrapper = new NamedAnalyzer(
+                searchAnalyzer.name(),
+                searchAnalyzer.scope(),
+                SearchAsYouTypeAnalyzer.withShingle(searchAnalyzer.analyzer(), maxShingleSize.getValue())
+            );
+            // don't wrap the root field's search quote analyzer as prefix field doesn't support phrase queries
+            TextSearchInfo prefixSearchInfo = new TextSearchInfo(prefixft, similarity.getValue(), prefixSearchWrapper, searchAnalyzer);
+            final PrefixFieldType prefixFieldType = new PrefixFieldType(fullName, prefixSearchInfo, Defaults.MIN_GRAM, Defaults.MAX_GRAM);
+            prefixFieldType.setIndexAnalyzer(new NamedAnalyzer(indexAnalyzer.name(), AnalyzerScope.INDEX, prefixIndexWrapper));
+            final PrefixFieldMapper prefixFieldMapper = new PrefixFieldMapper(prefixft, prefixFieldType);
+
+            // set up the shingle fields
+            final ShingleFieldMapper[] shingleFieldMappers = new ShingleFieldMapper[maxShingleSize.getValue() - 1];
+            final ShingleFieldType[] shingleFieldTypes = new ShingleFieldType[maxShingleSize.getValue() - 1];
+            for (int i = 0; i < shingleFieldMappers.length; i++) {
+                final int shingleSize = i + 2;
+                FieldType shingleft = new FieldType(fieldType);
+                shingleft.setStored(false);
+                String fieldName = getShingleFieldName(buildFullName(context), shingleSize);
+                // wrap the root field's index, search, and search quote analyzers with shingles
+                final SearchAsYouTypeAnalyzer shingleIndexWrapper = SearchAsYouTypeAnalyzer.withShingle(
+                    indexAnalyzer.analyzer(),
+                    shingleSize
+                );
+                final NamedAnalyzer shingleSearchWrapper = new NamedAnalyzer(
+                    searchAnalyzer.name(),
+                    searchAnalyzer.scope(),
+                    SearchAsYouTypeAnalyzer.withShingle(searchAnalyzer.analyzer(), shingleSize)
+                );
+                final NamedAnalyzer shingleSearchQuoteWrapper = new NamedAnalyzer(
+                    searchAnalyzer.name(),
+                    searchAnalyzer.scope(),
+                    SearchAsYouTypeAnalyzer.withShingle(searchAnalyzer.analyzer(), shingleSize)
+                );
+                TextSearchInfo textSearchInfo = new TextSearchInfo(
+                    shingleft,
+                    similarity.getValue(),
+                    shingleSearchWrapper,
+                    shingleSearchQuoteWrapper
+                );
+                final ShingleFieldType shingleFieldType = new ShingleFieldType(fieldName, shingleSize, textSearchInfo);
+                shingleFieldType.setIndexAnalyzer(new NamedAnalyzer(indexAnalyzer.name(), AnalyzerScope.INDEX, shingleIndexWrapper));
+                shingleFieldType.setPrefixFieldType(prefixFieldType);
+                shingleFieldTypes[i] = shingleFieldType;
+                shingleFieldMappers[i] = new ShingleFieldMapper(shingleft, shingleFieldType);
+            }
+            ft.setPrefixField(prefixFieldType);
+            ft.setShingleFields(shingleFieldTypes);
+            return new SearchAsYouTypeFieldMapper(name, ft, copyTo.build(), prefixFieldMapper, shingleFieldMappers, this);
+        }
+    }
+Thought:The code for the SearchAsYouTypeFieldMapper class and its function has been retrieved. However, it doesn't seem to directly relate to the issue described by the user. The user's problem is related to the index.number_of_routing_shards setting in Elasticsearch, but the retrieved code is about text field mapping. It's possible that the issue might be in another part of the code or in how Elasticsearch handles index settings. To investigate further, I'll use the ToT_tool to look into other functions that might be related to the issue.
+
+Action: ToT_tool
+Action Input: {"prompt": "The index level setting index.number_of_routing_shards can be set at the index creation time, but if it is set to null explicitly, the value is different from the value when it's not set. The issue is related to the index.number_of_routing_shards setting in Elasticsearch.", "query 1": "SearchAsYouTypeFieldMapper.SearchAsYouTypeFieldMapper", "query 2": "IndexMetaData.Builder.numberOfRoutingShards", "query 3": "IndexSettings.IndexSettings"}
+
+Tree of Thought Queries:
+The index level setting index.number_of_routing_shards can be set at the index creation time, but if it is set to null explicitly, the value is different from the value when it's not set. The issue is related to the index.number_of_routing_shards setting in Elasticsearch.
+         query 1: SearchAsYouTypeFieldMapper.SearchAsYouTypeFieldMapper
+         query 2: IndexMetaData.Builder.numberOfRoutingShards
+         query 3: IndexSettings.IndexSettings
+Add another query (ENTER if nothing to add): 
+ToT new_tree query prompt: SearchAsYouTypeFieldMapper.SearchAsYouTypeFieldMapper
+S to skip: 
+/Users/navtej.reddy/obs_workspace/DebugMate/env/lib/python3.12/site-packages/langchain/_api/module_import.py:92: LangChainDeprecationWarning: Importing load_tools from langchain.agents is deprecated. Please replace deprecated imports:
+
+>> from langchain.agents import load_tools
+
+with new imports of:
+
+>> from langchain_community.agent_toolkits.load_tools import load_tools
+You can use the langchain cli to **automatically** upgrade many imports. Please see documentation here <https://python.langchain.com/v0.2/docs/versions/v0_2/>
+  warn_deprecated(
+
+
+> Entering new RetryAgentExecutor chain...
+The code for the SearchAsYouTypeFieldMapper class and its function has been retrieved. However, the code does not seem to directly relate to the issue described by the user, which is about the index.number_of_routing_shards setting in Elasticsearch. The next step should be to use the StackOverflowSearch tool to find more information about the index.number_of_routing_shards setting and how it behaves when set to null.
+
+Action: StackOverflowSearch
+Action Input: Elasticsearch index.number_of_routing_shards set to null behavior
+Observation: That's an interesting problem. If you run GET _cat/indices?v before and after the indexing operations, do you see any differences? next answer: Hello Val, thank you for your reply, unfortunately i had to restart service to unlock customer so i can't provide details, anyway, for sure document count is not growing. Have you ever observed any similar behavior? next answer: Can you make sure to run this the next time it happens (in a few days)? Do you have any automated process running that might change the index setting in the background? Can you GET the index _settings the next time that happens? next answer: This is what i get from _settings, i've done this the last time it was hanged          "settings": {             "index": {                 "creation_date": "1628763148510",                 "number_of_shards": "5",                 "number_of_replicas": "1",                 "uuid": "2yfLQd4MSSuSpEt1UNaxSg",                 "version": {                     "created": "6060299"                 },                 "provided_name": "xxx"             }         } next answer: Thanks, but it would be interesting to see the settings the next time this issue happens.
+Thought:The StackOverflowSearch results suggest that the behavior of the index.number_of_routing_shards setting when set to null is not well-documented or commonly discussed. The user might be experiencing a unique or rare issue. The next step should be to use the ConfluenceSearch tool to see if there is any internal documentation or discussions about this setting and its behavior when set to null.
+
+Action: ConfluenceSearch
+Action Input: Elasticsearch index.number_of_routing_shards set to null behavior/Users/navtej.reddy/obs_workspace/DebugMate/env/lib/python3.12/site-packages/langchain_core/_api/deprecation.py:139: LangChainDeprecationWarning: The class `Chroma` was deprecated in LangChain 0.2.9 and will be removed in 0.4. An updated version of the class exists in the langchain-chroma package and should be used instead. To use it run `pip install -U langchain-chroma` and import as `from langchain_chroma import Chroma`.
+  warn_deprecated(
+Traceback (most recent call last):
+  File "/Users/navtej.reddy/obs_workspace/DebugMate/env/lib/python3.12/site-packages/langchain_community/vectorstores/chroma.py", line 83, in __init__
+    import chromadb
+ModuleNotFoundError: No module named 'chromadb'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/navtej.reddy/obs_workspace/DebugMate/main.py", line 31, in <module>
+    debugmate_agent.run("""
+  File "/Users/navtej.reddy/obs_workspace/DebugMate/agents/debugmate_agent.py", line 87, in run
+    outputs = self.agent_executor({"input": prompt})
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/navtej.reddy/obs_workspace/DebugMate/env/lib/python3.12/site-packages/langchain_core/_api/deprecation.py", line 168, in warning_emitting_wrapper
+    return wrapped(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/navtej.reddy/obs_workspace/DebugMate/env/lib/python3.12/site-packages/langchain/chains/base.py", line 383, in __call__
+    return self.invoke(
+           ^^^^^^^^^^^^
+  File "/Users/navtej.reddy/obs_workspace/DebugMate/env/lib/python3.12/site-packages/langchain/chains/base.py", line 166, in invoke
+    raise e
+  File "/Users/navtej.reddy/obs_workspace/DebugMate/env/lib/python3.12/site-packages/langchain/chains/base.py", line 156, in invoke
+    self._call(inputs, run_manager=run_manager)
+  File "/Users/navtej.reddy/obs_workspace/DebugMate/agents/mrkl_executor.py", line 102, in _call
+    next_step_output = self._take_next_step(
+                       ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/navtej.reddy/obs_workspace/DebugMate/env/lib/python3.12/site-packages/langchain/agents/agent.py", line 1318, in _take_next_step
+    [
+  File "/Users/navtej.reddy/obs_workspace/DebugMate/env/lib/python3.12/site-packages/langchain/agents/agent.py", line 1403, in _iter_next_step
+    yield self._perform_agent_action(
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/navtej.reddy/obs_workspace/DebugMate/env/lib/python3.12/site-packages/langchain/agents/agent.py", line 1425, in _perform_agent_action
+    observation = tool.run(
+                  ^^^^^^^^^
+  File "/Users/navtej.reddy/obs_workspace/DebugMate/env/lib/python3.12/site-packages/langchain_core/tools.py", line 615, in run
+    raise error_to_raise
+  File "/Users/navtej.reddy/obs_workspace/DebugMate/env/lib/python3.12/site-packages/langchain_core/tools.py", line 584, in run
+    response = context.run(self._run, *tool_args, **tool_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/navtej.reddy/obs_workspace/DebugMate/agents/ToT_tool.py", line 53, in _run
+    response = agent.run(prompt)
+               ^^^^^^^^^^^^^^^^^
+  File "/Users/navtej.reddy/obs_workspace/DebugMate/agents/debugmate_agent.py", line 87, in run
+    outputs = self.agent_executor({"input": prompt})
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/navtej.reddy/obs_workspace/DebugMate/env/lib/python3.12/site-packages/langchain_core/_api/deprecation.py", line 168, in warning_emitting_wrapper
+    return wrapped(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/navtej.reddy/obs_workspace/DebugMate/env/lib/python3.12/site-packages/langchain/chains/base.py", line 383, in __call__
+    return self.invoke(
+           ^^^^^^^^^^^^
+  File "/Users/navtej.reddy/obs_workspace/DebugMate/env/lib/python3.12/site-packages/langchain/chains/base.py", line 166, in invoke
+    raise e
+  File "/Users/navtej.reddy/obs_workspace/DebugMate/env/lib/python3.12/site-packages/langchain/chains/base.py", line 156, in invoke
+    self._call(inputs, run_manager=run_manager)
+  File "/Users/navtej.reddy/obs_workspace/DebugMate/agents/mrkl_executor.py", line 102, in _call
+    next_step_output = self._take_next_step(
+                       ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/navtej.reddy/obs_workspace/DebugMate/env/lib/python3.12/site-packages/langchain/agents/agent.py", line 1318, in _take_next_step
+    [
+  File "/Users/navtej.reddy/obs_workspace/DebugMate/env/lib/python3.12/site-packages/langchain/agents/agent.py", line 1403, in _iter_next_step
+    yield self._perform_agent_action(
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/navtej.reddy/obs_workspace/DebugMate/env/lib/python3.12/site-packages/langchain/agents/agent.py", line 1425, in _perform_agent_action
+    observation = tool.run(
+                  ^^^^^^^^^
+  File "/Users/navtej.reddy/obs_workspace/DebugMate/env/lib/python3.12/site-packages/langchain_core/tools.py", line 615, in run
+    raise error_to_raise
+  File "/Users/navtej.reddy/obs_workspace/DebugMate/env/lib/python3.12/site-packages/langchain_core/tools.py", line 584, in run
+    response = context.run(self._run, *tool_args, **tool_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/navtej.reddy/obs_workspace/DebugMate/tools/confluence_tool.py", line 17, in _run
+    model = HelpDesk(new_db=False)
+            ^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/navtej.reddy/obs_workspace/DebugMate/tools/help_desk.py", line 23, in __init__
+    self.db = load_db.DataLoader().get_db(self.embeddings)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/navtej.reddy/obs_workspace/DebugMate/tools/load_db.py", line 121, in get_db
+    db = self.load_from_db(embeddings)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/navtej.reddy/obs_workspace/DebugMate/tools/load_db.py", line 96, in load_from_db
+    db = Chroma(
+         ^^^^^^^
+  File "/Users/navtej.reddy/obs_workspace/DebugMate/env/lib/python3.12/site-packages/langchain_core/_api/deprecation.py", line 203, in warn_if_direct_instance
+    return wrapped(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/navtej.reddy/obs_workspace/DebugMate/env/lib/python3.12/site-packages/langchain_community/vectorstores/chroma.py", line 86, in __init__
+    raise ImportError(
+ImportError: Could not import chromadb python package. Please install it with `pip install chromadb`.
